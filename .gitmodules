@@ -1,0 +1,6 @@
+[submodule "premake"]
+	path = premake
+	url = https://github.com/rainerzufalldererste/premakeBuild.git
+[submodule "examples/decoder/3rdParty/SDL2"]
+	path = examples/decoder/3rdParty/SDL2
+	url = https://github.com/rainerzufalldererste/SDL2build.git
