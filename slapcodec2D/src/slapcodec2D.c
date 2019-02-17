@@ -348,10 +348,13 @@ slapResult slapEncoder_BeginFrame(IN slapEncoder *pEncoder, IN void *pData)
     goto epilogue;
   }
 
-  if (pEncoder->frameIndex % pEncoder->iframeStep != 0)
-    _slapEncodeLastFrameDiff(pEncoder->pLastFrame, pData, pEncoder->resX, pEncoder->resY);
-  else
-    _slapCopyToLastFrame(pData, pEncoder->pLastFrame, pEncoder->resX, pEncoder->resY);
+  if (pEncoder->iframeStep > 1)
+  {
+    if (pEncoder->frameIndex % pEncoder->iframeStep != 0)
+      _slapEncodeLastFrameDiff(pEncoder->pLastFrame, pData, pEncoder->resX, pEncoder->resY);
+    else
+      _slapCopyToLastFrame(pData, pEncoder->pLastFrame, pEncoder->resX, pEncoder->resY);
+  }
 
 epilogue:
   return result;
@@ -421,8 +424,11 @@ slapResult slapEncoder_EndFrame(IN slapEncoder *pEncoder, IN void *pData)
     goto epilogue;
   }
 
-  if (pEncoder->frameIndex % pEncoder->iframeStep != 0)
-    _slapDecodeLastFrameDiff(pData, pEncoder->pLastFrame, pEncoder->resX, pEncoder->resY);
+  if (pEncoder->iframeStep > 1)
+  {
+    if (pEncoder->frameIndex % pEncoder->iframeStep != 0)
+      _slapDecodeLastFrameDiff(pData, pEncoder->pLastFrame, pEncoder->resX, pEncoder->resY);
+  }
 
   pEncoder->frameIndex++;
 
@@ -558,10 +564,39 @@ slapResult slapFileWriter_SetIntraFrameStep(slapFileWriter *pFileWriter, const s
   if (step == 0)
     return slapError_InvalidParameter;
 
-  if (pFileWriter->pEncoder->frameIndex != 0)
+  if (pFileWriter->pEncoder->frameIndex != 0 || pFileWriter->headerPosition != SLAP_PRE_HEADER_SIZE)
     return slapError_StateInvalid;
 
-  pFileWriter->pEncoder->iframeStep = step;
+  pFileWriter->frameSizeOffsets[SLAP_PRE_HEADER_IFRAME_STEP_INDEX] = pFileWriter->pEncoder->iframeStep = step;
+
+  return slapSuccess;
+}
+
+slapResult slapFileWriter_SetEncoderFrameQuality(slapFileWriter * pFileWriter, const size_t quality)
+{
+  if (!pFileWriter)
+    return slapError_ArgumentNull;
+
+  if (quality == 0 || quality > 100)
+    return slapError_InvalidParameter;
+
+  pFileWriter->pEncoder->quality = (int)quality;
+
+  return slapSuccess;
+}
+
+slapResult slapFileWriter_SetEncoderIntraFrameQuality(slapFileWriter * pFileWriter, const size_t quality)
+{
+  if (!pFileWriter)
+    return slapError_ArgumentNull;
+
+  if (pFileWriter->pEncoder->iframeStep == 1)
+    return slapError_StateInvalid;
+
+  if (quality == 0 || quality > 100)
+    return slapError_InvalidParameter;
+
+  pFileWriter->pEncoder->iframeQuality = (int)quality;
 
   return slapSuccess;
 }
@@ -851,10 +886,13 @@ slapResult slapDecoder_FinalizeFrame(IN slapDecoder *pDecoder, IN void *pData, c
     goto epilogue;
   }
 
-  if (pDecoder->frameIndex % pDecoder->iframeStep != 0)
-    _slapDecodeLastFrameDiff(pYUVData, pDecoder->pLastFrame, pDecoder->resX, pDecoder->resY);
-  else
-    _slapCopyToLastFrame(pYUVData, pDecoder->pLastFrame, pDecoder->resX, pDecoder->resY);
+  if (pDecoder->iframeStep > 1)
+  {
+    if (pDecoder->frameIndex % pDecoder->iframeStep != 0)
+      _slapDecodeLastFrameDiff(pYUVData, pDecoder->pLastFrame, pDecoder->resX, pDecoder->resY);
+    else
+      _slapCopyToLastFrame(pYUVData, pDecoder->pLastFrame, pDecoder->resX, pDecoder->resY);
+  }
 
   pDecoder->frameIndex++;
 

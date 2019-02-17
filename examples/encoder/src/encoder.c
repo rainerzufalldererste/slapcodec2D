@@ -4,6 +4,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <time.h>
 
 #include <libavcodec/avcodec.h>
 #include <libavformat/avformat.h>
@@ -19,6 +20,7 @@
 #endif
 
 void *pFrameData = NULL;
+clock_t encodingTime = 0;
 
 static void decode(AVCodecContext *pCodecContext, AVFrame *pFrame, AVPacket *pPacket, const char *filename, slapFileWriter *pFileWriter, const size_t sizeX, const size_t sizeY)
 {
@@ -66,6 +68,8 @@ static void decode(AVCodecContext *pCodecContext, AVFrame *pFrame, AVPacket *pPa
     for (size_t y = 0; y < sizeY >> 1; y++)
       slapMemcpy((uint8_t *)pFrameData + sizeX * sizeY * 5 / 4 + y * sizeX / 2, pFrame->data[2] + y * pFrame->linesize[2], sizeX >> 1);
 
+    clock_t time = clock();
+
     slapResult result = slapFileWriter_AddFrameYUV420(pFileWriter, pFrameData);
     
     if (result)
@@ -73,21 +77,36 @@ static void decode(AVCodecContext *pCodecContext, AVFrame *pFrame, AVPacket *pPa
       PRINT_ERROR("Failed to add frame to slap.\n");
       EXIT_ERROR();
     }
+
+    encodingTime += (clock() - time);
   }
 }
 
-int main(int argc, char **argv)
+int main(int argc, char **pArgv)
 {
   const char *filename, *outfilename;
 
   if (argc <= 2)
   {
-    PRINT_ERROR("Usage: %s <input file> <output file>\n", argv[0]);
+    PRINT_ERROR("Usage: %s <input file> <output file> \n\t\t[intraFrameStep (default: 1) \n\t\t  [quality (1 - 100, default 75) \n\t\t    [intraFrameQuality (1 - 100, default 75, only if intraFrameStep > 1)\n\t\t]]]\n", pArgv[0]);
     exit(0);
   }
 
-  filename = argv[1];
-  outfilename = argv[2];
+  filename = pArgv[1];
+  outfilename = pArgv[2];
+
+  size_t intraFrameStep = 1;
+  size_t quality = 0;
+  size_t intraFrameQuality = 0;
+
+  if (argc >= 4)
+    intraFrameStep = atoi(pArgv[3]);
+
+  if (argc >= 5)
+    quality = atoi(pArgv[4]);
+
+  if (argc >= 6)
+    intraFrameQuality = atoi(pArgv[5]);
 
   AVFormatContext *pFormatContext = avformat_alloc_context();
 
@@ -163,6 +182,24 @@ int main(int argc, char **argv)
     EXIT_ERROR();
   }
 
+  if (slapSuccess != slapFileWriter_SetIntraFrameStep(pFileWriter, intraFrameStep))
+  {
+    PRINT_ERROR("Could not set intra frame step to slap file writer.\n");
+    EXIT_ERROR();
+  }
+
+  if (quality && slapSuccess != slapFileWriter_SetEncoderFrameQuality(pFileWriter, quality))
+  {
+    PRINT_ERROR("Could not set intra frame step to slap file writer.\n");
+    EXIT_ERROR();
+  }
+
+  if (intraFrameQuality && slapSuccess != slapFileWriter_SetEncoderIntraFrameQuality(pFileWriter, intraFrameQuality))
+  {
+    PRINT_ERROR("Could not set intra frame step to slap file writer.\n");
+    EXIT_ERROR();
+  }
+
   pFrameData = malloc(pCodecParams->width * pCodecParams->height * 3 / 2);
 
   AVPacket *pPacket = av_packet_alloc();
@@ -192,6 +229,8 @@ int main(int argc, char **argv)
   }
 
   slapDestroyFileWriter(&pFileWriter);
+
+  printf("\nslap2d raw encoding time: %" PRIu64 " ms.\n", (uint64_t)encodingTime);
 
   return 0;
 }

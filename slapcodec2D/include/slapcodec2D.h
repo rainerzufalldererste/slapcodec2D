@@ -48,12 +48,21 @@ extern "C" {
   typedef struct slapFileWriter slapFileWriter;
   typedef struct slapFileReader slapFileReader;
 
+  // Video Resolution has to be a multiple of 8.
   slapFileWriter * slapCreateFileWriter(const char *filename, const size_t sizeX, const size_t sizeY, const uint64_t flags);
   void slapDestroyFileWriter(IN_OUT slapFileWriter **ppFileWriter);
 
   // Setting the intra frame step to 1 will disable intra frame coding.
   // Default IntraFrameStep is 1. (No Intra Frames.)
+  // IntraFrameStep has to be be set before any frames are added.
   slapResult slapFileWriter_SetIntraFrameStep(slapFileWriter *pFileWriter, const size_t step);
+
+  // quality: 1 - 100. (default: 75)
+  slapResult slapFileWriter_SetEncoderFrameQuality(slapFileWriter *pFileWriter, const size_t quality);
+
+  // quality: 1 - 100. (default: 75)
+  // Returns `slapError_StateInvalid` if IntraFrameStep is 1.
+  slapResult slapFileWriter_SetEncoderIntraFrameQuality(slapFileWriter *pFileWriter, const size_t quality);
 
   slapResult slapFileWriter_AddFrameYUV420(IN slapFileWriter *pFileWriter, IN void *pData);
   slapResult slapFinalizeFileWriter(IN slapFileWriter *pFileWriter);

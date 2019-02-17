@@ -7,5 +7,6 @@ solution "slapcodec2D"
   dofile "slapcodec2D/project.lua"
 
   group "examples"
-    dofile "examples/Decoder/project.lua"
-    dofile "examples/Encoder/project.lua"
+    dofile "examples/advancedDecoder/project.lua"
+    dofile "examples/decoder/project.lua"
+    dofile "examples/encoder/project.lua"
