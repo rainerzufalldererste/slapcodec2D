@@ -66,6 +66,15 @@ extern "C" {
   slapResult slapFileReader_TransformBufferToBGRA(IN slapFileReader *pFileReader);
 
   slapResult slapFileReader_GetResolution(IN slapFileReader *pFileReader, OUT size_t *pResolutionX, OUT size_t *pResolutionY);
+  size_t slapFileReader_GetFrameCount(IN slapFileReader *pFileReader);
+  size_t slapFileReader_GetIntraFrameStep(IN slapFileReader *pFileReader);
+
+  // Set the frame index to the closest full frame prior to the specified frame index.
+  // If intra frame step = 1: Set the frame index to the specified frame index.
+  slapResult slapFileReader_SetFrameIndex(IN slapFileReader *pFileReader, const size_t frameIndex);
+
+  size_t slapFileReader_GetFrameIndex(IN slapFileReader *pFileReader);
+
   const void * slapFileReader_GetBufferYUV420(IN slapFileReader *pFileReader);
   const void * slapFileReader_GetBufferBGRA(IN slapFileReader *pFileReader);
 

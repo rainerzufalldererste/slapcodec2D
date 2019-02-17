@@ -948,6 +948,43 @@ slapResult slapFileReader_GetResolution(IN slapFileReader *pFileReader, OUT size
   return slapSuccess;
 }
 
+size_t slapFileReader_GetFrameCount(IN slapFileReader *pFileReader)
+{
+  if (!pFileReader)
+    return 0;
+
+  return pFileReader->preHeaderBlock[SLAP_PRE_HEADER_FRAME_COUNT_INDEX];
+}
+
+size_t slapFileReader_GetIntraFrameStep(IN slapFileReader *pFileReader)
+{
+  if (!pFileReader)
+    return (size_t)-1;
+
+  return pFileReader->pDecoder->iframeStep;
+}
+
+slapResult slapFileReader_SetFrameIndex(IN slapFileReader *pFileReader, const size_t frameIndex)
+{
+  if (!pFileReader)
+    return slapError_ArgumentNull;
+
+  if (slapFileReader_GetFrameCount(pFileReader) <= frameIndex)
+    return slapError_EndOfStream;
+
+  pFileReader->pDecoder->frameIndex = pFileReader->frameIndex = frameIndex - (frameIndex % slapFileReader_GetIntraFrameStep(pFileReader));
+  
+  return slapSuccess;
+}
+
+size_t slapFileReader_GetFrameIndex(IN slapFileReader *pFileReader)
+{
+  if (!pFileReader)
+    return (size_t)-1;
+
+  return pFileReader->frameIndex;
+}
+
 slapResult slapFileReader_ReadNextFrame(IN slapFileReader *pFileReader)
 {
   slapResult result = slapSuccess;

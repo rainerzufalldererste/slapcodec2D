@@ -44,6 +44,8 @@ int main(int argc, char **pArgv)
   if (!pFileReader)
     EXIT;
 
+  printf("Opened Video '%s' (%" PRIu64 " Frames, IntraFrameStep: %" PRIu64 ")\n", pArgv[1], (uint64_t)slapFileReader_GetFrameCount(pFileReader), (uint64_t)slapFileReader_GetIntraFrameStep(pFileReader));
+
   if (0 != SDL_Init(SDL_INIT_VIDEO))
     goto epilogue;
 
