@@ -934,7 +934,7 @@ slapFileReader * slapCreateFileReader(const char *filename)
   if (!pFileReader->pDecoder)
     goto epilogue;
 
-  frameSize = pFileReader->pDecoder->resX * pFileReader->pDecoder->resX * 3 / 2;
+  frameSize = pFileReader->pDecoder->resX * pFileReader->pDecoder->resY * 3 / 2;
 
   pFileReader->pDecodedFrameYUV = slapAlloc(uint8_t, frameSize);
 
@@ -1109,7 +1109,7 @@ epilogue:
   return result;
 }
 
-slapResult slapFileReader_GetNextFrame(IN slapFileReader * pFileReader)
+slapResult slapFileReader_GetNextFrame(IN slapFileReader *pFileReader)
 {
   slapResult result = slapFileReader_ReadNextFrame(pFileReader);
 
@@ -1119,7 +1119,7 @@ slapResult slapFileReader_GetNextFrame(IN slapFileReader * pFileReader)
   return slapFileReader_DecodeCurrentFrame(pFileReader);
 }
 
-slapResult slapFileReader_RestartVideoStream(IN slapFileReader * pFileReader)
+slapResult slapFileReader_RestartVideoStream(IN slapFileReader *pFileReader)
 {
   if (pFileReader == NULL)
     return slapError_ArgumentNull;
